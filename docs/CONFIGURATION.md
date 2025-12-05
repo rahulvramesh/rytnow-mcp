@@ -15,7 +15,7 @@ Complete guide for configuring Rytnow MCP Server with various AI assistants.
 
 ## Prerequisites
 
-1. **Node.js 18+** installed
+1. **Bun** installed (or download pre-built binary from [Releases](https://github.com/rahulvramesh/rytnow-mcp/releases))
 2. **Rytnow account** with at least one workspace
 3. **API token** generated from Rytnow
 
@@ -54,16 +54,32 @@ Response:
 
 ## Claude Code Configuration
 
-### Global Configuration
+### Using Pre-built Binary (Recommended)
 
-Edit `~/.claude/settings.json`:
+Download from [Releases](https://github.com/rahulvramesh/rytnow-mcp/releases), then edit `~/.claude/settings.json`:
 
 ```json
 {
   "mcpServers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/absolute/path/to/rytnow-mcp/dist/index.js"],
+      "command": "/path/to/rytnow-mcp-linux-x64",
+      "env": {
+        "RYTNOW_API_URL": "https://rytnow.me/api/v1",
+        "RYTNOW_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+### Using Bun (From Source)
+
+```json
+{
+  "mcpServers": {
+    "rytnow": {
+      "command": "bun",
+      "args": ["run", "/absolute/path/to/rytnow-mcp/src/index.ts"],
       "env": {
         "RYTNOW_API_URL": "https://rytnow.me/api/v1",
         "RYTNOW_API_TOKEN": "your-api-token-here"
@@ -81,8 +97,7 @@ Create `.claude/settings.json` in your project root:
 {
   "mcpServers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/absolute/path/to/rytnow-mcp/dist/index.js"],
+      "command": "/path/to/rytnow-mcp-linux-x64",
       "env": {
         "RYTNOW_API_URL": "https://rytnow.me/api/v1",
         "RYTNOW_API_TOKEN": "project-specific-token"
@@ -100,28 +115,11 @@ For local Rytnow development:
 {
   "mcpServers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/home/user/rytnow-mcp/dist/index.js"],
+      "command": "bun",
+      "args": ["run", "/home/user/rytnow-mcp/src/index.ts"],
       "env": {
         "RYTNOW_API_URL": "http://localhost:8000/api/v1",
         "RYTNOW_API_TOKEN": "your-local-token"
-      }
-    }
-  }
-}
-```
-
-### Using npx (No Installation)
-
-```json
-{
-  "mcpServers": {
-    "rytnow": {
-      "command": "npx",
-      "args": ["-y", "rytnow-mcp"],
-      "env": {
-        "RYTNOW_API_URL": "https://rytnow.me/api/v1",
-        "RYTNOW_API_TOKEN": "your-token"
       }
     }
   }
@@ -141,8 +139,7 @@ For local Rytnow development:
 ```json
 {
   "rytnow": {
-    "command": "node",
-    "args": ["/path/to/rytnow-mcp/dist/index.js"],
+    "command": "/path/to/rytnow-mcp-linux-x64",
     "env": {
       "RYTNOW_API_URL": "https://rytnow.me/api/v1",
       "RYTNOW_API_TOKEN": "your-token"
@@ -159,8 +156,7 @@ Create `.cursor/mcp.json` in your workspace:
 {
   "servers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/path/to/rytnow-mcp/dist/index.js"],
+      "command": "/path/to/rytnow-mcp-linux-x64",
       "env": {
         "RYTNOW_API_URL": "https://rytnow.me/api/v1",
         "RYTNOW_API_TOKEN": "your-token"
@@ -205,23 +201,39 @@ RYTNOW_API_TOKEN=your-local-token
 
 ## Production Setup
 
-### Using PM2
+### Using Pre-built Binary (Recommended)
+
+Download the binary for your platform and run directly:
 
 ```bash
-# Install PM2
-npm install -g pm2
+RYTNOW_API_URL=https://rytnow.me/api/v1 \
+RYTNOW_API_TOKEN=your-token \
+./rytnow-mcp-linux-x64
+```
 
-# Start the server
-pm2 start /path/to/rytnow-mcp/dist/index.js \
-  --name rytnow-mcp \
-  --env RYTNOW_API_URL=https://rytnow.me/api/v1 \
-  --env RYTNOW_API_TOKEN=your-token
+### Using systemd
 
-# Save process list
-pm2 save
+Create `/etc/systemd/system/rytnow-mcp.service`:
 
-# Setup startup script
-pm2 startup
+```ini
+[Unit]
+Description=Rytnow MCP Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/path/to/rytnow-mcp-linux-x64
+Environment=RYTNOW_API_URL=https://rytnow.me/api/v1
+Environment=RYTNOW_API_TOKEN=your-token
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable rytnow-mcp
+sudo systemctl start rytnow-mcp
 ```
 
 ### Using Docker
@@ -229,12 +241,12 @@ pm2 startup
 Create `Dockerfile`:
 
 ```dockerfile
-FROM node:20-alpine
+FROM oven/bun:latest
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist ./dist
-CMD ["node", "dist/index.js"]
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+COPY src ./src
+CMD ["bun", "run", "src/index.ts"]
 ```
 
 Build and run:
@@ -275,9 +287,15 @@ If configured correctly, you should see your Rytnow workspaces.
 Run the server manually to see debug output:
 
 ```bash
+# Using binary
 RYTNOW_API_URL=https://rytnow.me/api/v1 \
 RYTNOW_API_TOKEN=your-token \
-node /path/to/rytnow-mcp/dist/index.js
+./rytnow-mcp-linux-x64
+
+# Using bun
+RYTNOW_API_URL=https://rytnow.me/api/v1 \
+RYTNOW_API_TOKEN=your-token \
+bun run /path/to/rytnow-mcp/src/index.ts
 ```
 
 Check stderr for connection messages.
@@ -297,5 +315,5 @@ Check stderr for connection messages.
    - Server is not running (for local development)
 
 4. **"ENOENT: no such file or directory"**
-   - Path to dist/index.js is wrong
-   - Run `npm run build` to create dist folder
+   - Path to binary or source is wrong
+   - Check that the file exists and is executable

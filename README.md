@@ -3,7 +3,7 @@
 An MCP (Model Context Protocol) server that exposes [Rytnow](https://rytnow.me) project management capabilities to AI assistants like Claude Code.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
 
 ## Documentation
 
@@ -22,16 +22,39 @@ An MCP (Model Context Protocol) server that exposes [Rytnow](https://rytnow.me) 
 
 ## Installation
 
+### Option 1: Pre-built Binary (Recommended)
+
+Download the latest binary for your platform from [GitHub Releases](https://github.com/rahulvramesh/rytnow-mcp/releases):
+
+| Platform | Binary |
+|----------|--------|
+| Linux (x64) | `rytnow-mcp-linux-x64` |
+| Linux (ARM64) | `rytnow-mcp-linux-arm64` |
+| macOS (Intel) | `rytnow-mcp-darwin-x64` |
+| macOS (Apple Silicon) | `rytnow-mcp-darwin-arm64` |
+| Windows (x64) | `rytnow-mcp-windows-x64.exe` |
+
+```bash
+# Example for Linux/macOS
+chmod +x rytnow-mcp-linux-x64
+./rytnow-mcp-linux-x64
+```
+
+### Option 2: From Source (requires Bun)
+
 ```bash
 # Clone the repository
 git clone https://github.com/rahulvramesh/rytnow-mcp.git
 cd rytnow-mcp
 
 # Install dependencies
-npm install
+bun install
 
-# Build
-npm run build
+# Run directly
+bun run start
+
+# Or build a binary for your platform
+bun run build
 ```
 
 ## Configuration
@@ -46,12 +69,28 @@ Get your Rytnow API token from:
 
 Add to your Claude Code configuration file (`~/.claude/config.json` or `.claude/settings.json`):
 
+**Using pre-built binary:**
 ```json
 {
   "mcpServers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/path/to/rytnow-mcp/dist/index.js"],
+      "command": "/path/to/rytnow-mcp-linux-x64",
+      "env": {
+        "RYTNOW_API_URL": "https://rytnow.me/api/v1",
+        "RYTNOW_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+**Using Bun (from source):**
+```json
+{
+  "mcpServers": {
+    "rytnow": {
+      "command": "bun",
+      "args": ["run", "/path/to/rytnow-mcp/src/index.ts"],
       "env": {
         "RYTNOW_API_URL": "https://rytnow.me/api/v1",
         "RYTNOW_API_TOKEN": "your-api-token-here"
@@ -66,8 +105,8 @@ For local development:
 {
   "mcpServers": {
     "rytnow": {
-      "command": "node",
-      "args": ["/path/to/rytnow-mcp/dist/index.js"],
+      "command": "bun",
+      "args": ["run", "/path/to/rytnow-mcp/src/index.ts"],
       "env": {
         "RYTNOW_API_URL": "http://localhost:8000/api/v1",
         "RYTNOW_API_TOKEN": "your-local-token"
@@ -157,13 +196,16 @@ Once configured, you can use natural language in Claude Code:
 
 ```bash
 # Run in development mode (with hot reload)
-npm run dev
+bun run dev
 
 # Type check
-npm run typecheck
+bun run typecheck
 
-# Build for production
-npm run build
+# Build binary for current platform
+bun run build
+
+# Build binaries for all platforms
+bun run build:all
 ```
 
 ## Environment Variables
