@@ -2,6 +2,15 @@
 
 An MCP (Model Context Protocol) server that exposes [Rytnow](https://rytnow.me) project management capabilities to AI assistants like Claude Code.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+
+## Documentation
+
+- **[Tool Reference](docs/TOOLS.md)** - Complete reference for all 27 available tools
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Setup for Claude Code, Cursor, and more
+- **[Usage Examples](docs/EXAMPLES.md)** - Real-world workflows and automation examples
+
 ## Features
 
 - **Workspace & Project Navigation**: List workspaces, projects, and team members
